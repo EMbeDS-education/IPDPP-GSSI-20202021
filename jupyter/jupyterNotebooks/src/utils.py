@@ -62,9 +62,12 @@ def cv_scores_explained(model, X, y):
     
     for train, test in cv.split(X, y):
         # fitting model on K-1 folds
-        model.fit(X[train, :], y[train])
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X[train, :])
+        model.fit(X_train, y[train])
         # prediciton on test set
-        y_pred = model.predict(X[test, :])
+        X_test = scaler.transform(X[test, :])
+        y_pred = model.predict(X_test)
         
         # getting testing accuracy, f1 and recall score (Positive and Negative class)
         acc = metrics.accuracy_score(y[test], y_pred)
@@ -319,7 +322,23 @@ def plot_dendrograms(X):
 
     plt.tight_layout()
     
-   
+def np_logicf():   
+    ## Logic functions (https://numpy.org/doc/stable/reference/routines.logic.html)
+
+    data = np.random.randn(7, 4)
+    mask = data > 0
+    print('mask\n',mask)
+
+    # any( axis)
+    # Test whether any array element along a given axis evaluates to True.
+    print('\nmask.any()\n', mask.any() )
+    print('\nmask.any(axis=1)\n', mask.any(axis=1) )
+
+    #all(axis)
+    #Test whether all array elements along a given axis evaluate to True.
+    print('\nmask.all()\n', mask.all() )
+    print( '\nmask.all(axis=1)\n',mask.all(axis=1) )
+
 # # 99 no fraud - 1 froud
 # tp, tn, fp, fn = 0, 99, 0, 1 
 # acc = (tp + tn) / (tp + tn + fp + fn)

@@ -16,6 +16,41 @@ from sklearn.model_selection import validation_curve
 
 
 
+
+def biplot_pca(transformed_features, pca, columns, lenght=3.0, scaling_factor = 4):
+    """
+    This funtion will project your *original* features
+    onto your principal component feature-space, so that you can
+    visualize how "important" each one was in the multi-dimensional scaling
+    
+    USAGE:
+     > from src.utils import draw_vectors_pca
+     > draw_loadings_pca( pc_df, pca2d.components_, df_X_clean_scaled.columns.values,3.4)
+    """
+
+    # Scale the principal components by the max value in
+    # the transformed set belonging to that component
+    # 
+    # scaling_factor  for visualization reason
+    loadings = pca.components_.T * np.sqrt(pca.explained_variance_) * scaling_factor
+    xvector = loadings[:, 0]
+    yvector = loadings[:, 1]
+    
+    plt.figure(figsize=(13,8))    
+    plt.scatter(transformed_features['PC1'], transformed_features['PC2'], color='y', alpha=0.5)
+    plt.xlabel('PC 1')
+    plt.ylabel('PC 2')
+
+    for i in range(len(columns)):
+    # Use an arrow to project each original feature as a
+    # labeled vector on your principal component axes
+        if np.sqrt(xvector[i]**2 + yvector[i]**2) >lenght: # only vectors greater than lenght
+            plt.arrow(0, 0, xvector[i], yvector[i], color='b', width=0.0005, head_width=0.02, alpha=0.75)
+            plt.text(xvector[i]*1.2, yvector[i]*1.2, list(columns)[i], color='b', alpha=0.95)
+    
+    plt.show()
+    
+
 # for visualization  (and teaching) purpose
 def draw_boundary( algo, X_train,X_test,y_train,y_test):
     algo_name = type(algo).__name__
@@ -322,22 +357,6 @@ def plot_dendrograms(X):
 
     plt.tight_layout()
     
-def np_logicf():   
-    ## Logic functions (https://numpy.org/doc/stable/reference/routines.logic.html)
-
-    data = np.random.randn(7, 4)
-    mask = data > 0
-    print('mask\n',mask)
-
-    # any( axis)
-    # Test whether any array element along a given axis evaluates to True.
-    print('\nmask.any()\n', mask.any() )
-    print('\nmask.any(axis=1)\n', mask.any(axis=1) )
-
-    #all(axis)
-    #Test whether all array elements along a given axis evaluate to True.
-    print('\nmask.all()\n', mask.all() )
-    print( '\nmask.all(axis=1)\n',mask.all(axis=1) )
 
 # # 99 no fraud - 1 froud
 # tp, tn, fp, fn = 0, 99, 0, 1 
@@ -347,3 +366,42 @@ def np_logicf():
 # f1 = 0
 
 # acc, recall, precision
+
+from sklearn.inspection import permutation_importance
+#https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-auto-examples-inspection-plot-permutation-importance-py
+def get_importance_features(model, X, y, columns):
+    r = permutation_importance(model, X, y,
+                               n_repeats=30,
+                               random_state=0)
+
+    for i in r.importances_mean.argsort()[::-1]:
+        if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+            print(f"{columns[i]}"
+                  f" {r.importances_mean[i]:.3f}"
+                  f" +/- {r.importances_std[i]:.3f}")
+
+    fig, ax = plt.subplots()
+    sorted_idx = r.importances_mean.argsort()
+    ax.boxplot(r.importances[sorted_idx].T,
+               vert=False, labels=columns[sorted_idx])
+    ax.set_title("Permutation Importances (test set)")
+    fig.tight_layout()
+    plt.show() 
+
+def plot_decision_tree(model, X,y, column_names):
+    from sklearn import tree
+    
+#     clf = tree.DecisionTreeClassifier(max_depth=3,min_samples_leaf=8)  
+#     clf.fit(X, y)
+
+    fig = plt.figure(figsize=(25,20))
+    out = tree.plot_tree(model, 
+                       feature_names=column_names,  
+                       class_names=['Malignant','Benign'],
+                       filled=True)
+    for o in out: 
+        arrow = o.arrow_patch
+        if arrow is not None:
+            arrow.set_edgecolor('red')
+            arrow.set_linewidth(3)
+        

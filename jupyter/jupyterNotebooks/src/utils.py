@@ -99,9 +99,12 @@ def cv_scores_explained(model, X, y):
         # fitting model on K-1 folds
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X[train, :])
+        
         model.fit(X_train, y[train])
+        
         # prediciton on test set
         X_test = scaler.transform(X[test, :])
+        
         y_pred = model.predict(X_test)
         
         # getting testing accuracy, f1 and recall score (Positive and Negative class)
@@ -388,7 +391,7 @@ def get_importance_features(model, X, y, columns):
     fig.tight_layout()
     plt.show() 
 
-def plot_decision_tree(model, X,y, column_names):
+def plot_decision_tree(model, X,y, column_names,class_names=['Benign','Malignant']):
     from sklearn import tree
     
 #     clf = tree.DecisionTreeClassifier(max_depth=3,min_samples_leaf=8)  
@@ -397,7 +400,7 @@ def plot_decision_tree(model, X,y, column_names):
     fig = plt.figure(figsize=(25,20))
     out = tree.plot_tree(model, 
                        feature_names=column_names,  
-                       class_names=['Malignant','Benign'],
+                       class_names=class_names,
                        filled=True)
     for o in out: 
         arrow = o.arrow_patch
